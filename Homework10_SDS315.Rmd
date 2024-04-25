@@ -1,0 +1,95 @@
+---
+title: "Homework10_SDS315"
+author: "Caroline Zhuang"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(fig.height=3, fig.width=4, warning = FALSE)
+library(tidyverse)
+library(ggplot2)
+library(mosaic)
+library(effectsize)
+
+
+redlining <- read.csv('redlining.csv')
+groceries <- read.csv('groceries.csv')
+```
+
+# **Problem 1** 
+```{r, echo = FALSE}
+lm_lining = lm(policies ~ minority + fire + age + income, data = redlining)
+coef(lm_lining)
+```
+
+* Question: Is there an association between the number of FAIR policies and racial composition of ZIP code, factoring in the fire, age, and income variables? 
+* Approach: To answer the question, I used a linear regression model with policies being the y variable and minority, fire, age, and income being the x variables. 
+* Results: The intercept is -0.125. As minority percentage increases, the number of policies increase by 0.008. As fires increase, policies increase by 0.022. For every increase in percent of housing units built before WWII, the policies increase by 0.006. For every increase in income, the policies decrease by 0.016. 
+* Conclusion: While minority percentages play a role in the number of policies, the number of fires per 100 housing units factors in more to the number of policies as the coefficient is higher. This means in neighborhoods where there are more fires, there is less access to the private market. Whereas the rest of the variables have positive coefficients, as income increases, the number of policies decrease. This means neighborhoods with higher incomes have more access to the private market. 
+
+# **Problem 2** 
+
+## **Part A**
+```{r, echo = FALSE, fig.width = 6, fig.height = 6}
+average = groceries %>%
+  group_by(Store) %>% 
+  summarize(avg_price = mean(Price))
+
+ggplot(average) + 
+  geom_bar(aes(x = Store, y = avg_price), stat = "identity") + 
+  labs(title = "Average Price of Products for each Store") +
+  coord_flip()
+```
+
+The bar graph above shows the average price of products sold at each store. 
+
+## **Part B** 
+```{r, echo = FALSE, fig.width = 10, fig.height = 10}
+product = groceries %>%
+  group_by(Product) %>%
+  summarize(total_prod = count(Product))
+
+ggplot(product) +
+  geom_bar(aes(x = Product, y = total_prod), stat = "identity") +
+  coord_flip()
+```
+
+The bar graph above shows the amount of stores that sell each product. For example, 16 stores sell a carton of eggs. 
+
+## **Part C**
+```{r, echo = FALSE}
+lm_type = lm(Price ~ Type + Product, data= groceries)
+confint(lm_type, level = 0.95)
+```
+Compared with ordinary grocery stores (like Albertsons, HEB, or Krogers), convenience stores charge somewhere between 0.41 and 0.92 dollars more for the same product.
+
+## **Part D** 
+```{r, echo = FALSE}
+lm_store = lm(Price ~ Product + Store, data = groceries)
+confint(lm_store, level = 0.95)
+```
+From the confidence intervals above, the two stores charging the highest prices are Whole Foods and Wheatsville Food Co-Op. 
+
+## **Part E** 
+From my model in Part D, Central Market seems to charge a similar amount to HEB for the same product. HEB has a confidence interval of -0.95 to -0.35 while Central Market has an interval between -0.92 and -0.23. The difference between these stores is a lot less than the difference between a store like Whole Foods and HEB. 
+
+## **Part F** 
+```{r, echo = FALSE}
+groceries = groceries %>%
+  mutate(income10k = Income/10000)
+
+lm_income = lm(Price ~ income10k + Product, data = groceries)
+coef(lm_income) %>% round(3)
+
+standardize_parameters(lm_income)
+```
+The coefficient of income10k is -0.014. Since the coefficient is negative, that means as income increases, the price decreases. This means people in poorer neighborhoods pay more for the same product on average.
+A one-standard deviation increase in the income of a ZIP code seems to be associated with
+a -0.03 standard-deviation change in the price that consumers in that ZIP code expect to pay for
+the same product. 
+
